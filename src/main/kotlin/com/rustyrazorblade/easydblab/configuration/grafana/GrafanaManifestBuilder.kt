@@ -33,8 +33,9 @@ class GrafanaManifestBuilder(
     companion object {
         private const val NAMESPACE = "default"
         private const val APP_LABEL = "grafana"
-        private const val GRAFANA_IMAGE = "grafana/grafana:latest"
-        private const val IMAGE_RENDERER_IMAGE = "grafana/grafana-image-renderer:latest"
+        private const val GRAFANA_IMAGE = "grafana/grafana:13.0.1"
+        private const val IMAGE_RENDERER_IMAGE =
+            "grafana/grafana-image-renderer@sha256:6c432f1aed266ce56433becacd197cdab708f9089104d67664207b4fe0975055"
         private const val GRAFANA_PORT = 3000
         private const val IMAGE_RENDERER_PORT = 8081
         private const val PROVISIONING_CONFIGMAP_NAME = "grafana-dashboards-config"
@@ -55,6 +56,8 @@ class GrafanaManifestBuilder(
 
         private const val GRAFANA_PLUGINS =
             "grafana-clickhouse-datasource,victoriametrics-logs-datasource,grafana-pyroscope-datasource,grafana-polystat-panel"
+
+        private const val RENDERER_TOKEN = "easydblab-renderer"
 
         private const val DASHBOARDS_YAML_RESOURCE = "dashboards.yaml"
     }
@@ -214,6 +217,7 @@ class GrafanaManifestBuilder(
             .withContainerPort(IMAGE_RENDERER_PORT)
             .withProtocol("TCP")
             .endPort()
+            .withEnv(listOf(envVar("AUTH_TOKEN", RENDERER_TOKEN)))
             .build()
 
     private fun buildVolumeMounts(): List<VolumeMount> {
@@ -301,6 +305,7 @@ class GrafanaManifestBuilder(
             ),
             envVar("GF_RENDERING_SERVER_URL", "http://localhost:$IMAGE_RENDERER_PORT/render"),
             envVar("GF_RENDERING_CALLBACK_URL", "http://localhost:$GRAFANA_PORT/"),
+            envVar("GF_RENDERING_RENDERER_TOKEN", RENDERER_TOKEN),
         )
 
     private fun envVar(
