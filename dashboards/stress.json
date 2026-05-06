@@ -295,7 +295,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "mutations{job=\"cassandra-easy-stress\", quantile=\"${quantile, cluster=~\"$cluster\"}\"}",
+          "expr": "mutations{job=\"cassandra-easy-stress\", quantile=\"$quantile\", cluster=~\"$cluster\"}",
           "legendFormat": "{{job_name}}",
           "refId": "A"
         }
@@ -385,7 +385,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "selects{job=\"cassandra-easy-stress\", quantile=\"${quantile, cluster=~\"$cluster\"}\"}",
+          "expr": "selects{job=\"cassandra-easy-stress\", quantile=\"$quantile\", cluster=~\"$cluster\"}",
           "legendFormat": "{{job_name}}",
           "refId": "A"
         }
@@ -475,7 +475,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "deletions{job=\"cassandra-easy-stress\", quantile=\"${quantile, cluster=~\"$cluster\"}\"}",
+          "expr": "deletions{job=\"cassandra-easy-stress\", quantile=\"$quantile\", cluster=~\"$cluster\"}",
           "legendFormat": "{{job_name}}",
           "refId": "A"
         }
