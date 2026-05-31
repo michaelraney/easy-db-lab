@@ -44,8 +44,39 @@ if [ "${EASY_DB_LAB_USE_DOCKER}" = "1" ]; then
     export EASY_DB_LAB_REDIS_URL="redis://localhost:6399/easydblab-events"
 fi
 
-# Route OTel agent logs through application logger (logback) instead of stdout
-# This prevents agent messages from polluting machine-readable output (like JSON policies)
-export OTEL_JAVAAGENT_LOGGING=application
+# Load the OTel agent only when the collector is running
+OTEL_AGENT_ARG=""
+if [ "${EASY_DB_LAB_USE_DOCKER}" = "1" ]; then
+    # Route OTel agent logs through application logger (logback) instead of stdout
+    # This prevents agent messages from polluting machine-readable output (like JSON policies)
+    export OTEL_JAVAAGENT_LOGGING=application
+    OTEL_AGENT_ARG="-javaagent:${OTEL_AGENT}"
+fi
 
-java -Xshare:off -Deasydblab.version=$VERSION -Deasydblab.apphome=$APP_HOME -javaagent:"$OTEL_AGENT" -jar $JAR "$@"
+# async-profiler (opt-in: set EASY_DB_LAB_PROFILING=1 to enable)
+ASYNC_PROFILER_VERSION="3.0"
+ASYNC_PROFILER_LIB="${APP_HOME}/.async-profiler/lib/libasyncProfiler.dylib"
+PROFILER_AGENT_ARG=""
+
+if [ "${EASY_DB_LAB_PROFILING}" = "1" ]; then
+    mkdir -p "${APP_HOME}/profiles"
+
+    if [ ! -f "${ASYNC_PROFILER_LIB}" ]; then
+        echo "Downloading async-profiler ${ASYNC_PROFILER_VERSION}..." >&2
+        DOWNLOAD_URL="https://github.com/async-profiler/async-profiler/releases/download/v${ASYNC_PROFILER_VERSION}/async-profiler-${ASYNC_PROFILER_VERSION}-macos.zip"
+        TMP_ZIP=$(mktemp /tmp/async-profiler-XXXXXX.zip)
+        mkdir -p "$(dirname "${ASYNC_PROFILER_LIB}")"
+        curl -fsSL -o "${TMP_ZIP}" "${DOWNLOAD_URL}"
+        unzip -jo "${TMP_ZIP}" "*/lib/libasyncProfiler.dylib" -d "$(dirname "${ASYNC_PROFILER_LIB}")"
+        rm -f "${TMP_ZIP}"
+        # Remove macOS quarantine flag so the dylib can load as a JVM agent
+        xattr -d com.apple.quarantine "${ASYNC_PROFILER_LIB}" 2>/dev/null || true
+        echo "async-profiler installed to $(dirname "${ASYNC_PROFILER_LIB}")" >&2
+    fi
+
+    PROFILE_FILE="${APP_HOME}/profiles/profile-$(date +%Y%m%d-%H%M%S).html"
+    PROFILER_AGENT_ARG="-agentpath:${ASYNC_PROFILER_LIB}=start,event=wall,interval=5ms,threads,file=${PROFILE_FILE}"
+    echo "Profiling enabled → ${PROFILE_FILE}" >&2
+fi
+
+java -Xshare:off -Deasydblab.version=$VERSION -Deasydblab.apphome=$APP_HOME ${OTEL_AGENT_ARG} ${PROFILER_AGENT_ARG} -jar $JAR "$@"

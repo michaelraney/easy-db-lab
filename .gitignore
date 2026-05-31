@@ -166,3 +166,7 @@ clusters/
 .worktrees/
 .mcp-server.pid
 .claude/worktrees/
+
+# async-profiler binary and output
+profiles/
+.async-profiler/
