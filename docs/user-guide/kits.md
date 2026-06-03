@@ -12,25 +12,25 @@ for any workload you want to benchmark or test.
 List all available kits:
 
 ```bash
-$EDB kit list
+easy-db-lab kit list
 ```
 
 Inspect a kit before installing it — see its args, endpoints, and available commands:
 
 ```bash
-$EDB kit info clickhouse
+easy-db-lab kit info clickhouse
 ```
 
 ## Installing a kit
 
 ```bash
-$EDB kit install clickhouse --clickhouse-version 25.4 --size 100Gi
+easy-db-lab kit install clickhouse --clickhouse-version 25.4 --size 100Gi
 ```
 
 Args vary by kit. Run `kit info <name>` to see what a kit accepts, or pass `--help`:
 
 ```bash
-$EDB kit install clickhouse --help
+easy-db-lab kit install clickhouse --help
 ```
 
 After install, the kit's files are written into a subdirectory of the cluster workspace.
@@ -41,12 +41,12 @@ The kit's lifecycle commands are registered automatically.
 Every installed kit gains a set of subcommands:
 
 ```bash
-$EDB clickhouse start       # deploy and start the workload
-$EDB clickhouse status      # show running state and connection endpoints
-$EDB clickhouse stop        # stop and remove the workload
-$EDB clickhouse backup --name my-backup   # back up data
-$EDB clickhouse restore --name my-backup  # restore from backup
-$EDB clickhouse uninstall   # stop and remove all kit resources
+easy-db-lab clickhouse start       # deploy and start the workload
+easy-db-lab clickhouse status      # show running state and connection endpoints
+easy-db-lab clickhouse stop        # stop and remove the workload
+easy-db-lab clickhouse backup --name my-backup   # back up data
+easy-db-lab clickhouse restore --name my-backup  # restore from backup
+easy-db-lab clickhouse uninstall   # stop and remove all kit resources
 ```
 
 ## Creating a custom kit
@@ -370,5 +370,5 @@ mkdir -p ~/.easy-db-lab/profiles/default/kits/my-kit
 cp -r /path/to/my-kit/* ~/.easy-db-lab/profiles/default/kits/my-kit/
 
 # Now it appears in kit list and can be installed by name:
-$EDB kit install my-kit
+easy-db-lab kit install my-kit
 ```
