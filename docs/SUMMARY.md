@@ -12,26 +12,19 @@
 
 - [Cluster Setup](user-guide/cluster-setup.md)
 - [Tutorial](user-guide/tutorial.md)
-- [Kubernetes](user-guide/kubernetes.md)
-- [Platform Substrate](user-guide/platform-substrate.md)
-- [Network Connectivity](user-guide/network-connectivity.md)
-- [Shell Aliases](user-guide/shell-aliases.md)
-- [Kits](user-guide/kits.md)
-  - [ClickHouse](user-guide/clickhouse.md)
-  - [Presto](user-guide/install-presto.md)
-
-## Databases
-
 - [Cassandra](user-guide/installing-cassandra.md)
 - [OpenSearch](user-guide/opensearch.md)
 - [Spark](user-guide/spark.md)
-
-## Observability
-
+- [Kits](user-guide/kits.md)
+  - [ClickHouse](user-guide/clickhouse.md)
+  - [Presto](user-guide/install-presto.md)
 - [Monitoring](user-guide/monitoring.md)
-- [Profiling](user-guide/profiling.md)
-- [Victoria Metrics](user-guide/victoria-metrics.md)
-- [Victoria Logs](user-guide/victoria-logs.md)
+  - [Profiling](user-guide/profiling.md)
+  - [Metrics](user-guide/victoria-metrics.md)
+  - [Logging](user-guide/victoria-logs.md)
+- [Kubernetes](user-guide/kubernetes.md)
+- [Network Connectivity](user-guide/network-connectivity.md)
+- [Shell Aliases](user-guide/shell-aliases.md)
 
 # Integrations
 
@@ -55,5 +48,4 @@
 - [End-to-End Testing](development/end-to-end-testing.md)
 - [Spark](development/spark.md)
 - [SOCKS Proxy Architecture](development/socks-proxy.md)
-- [Fabric8 Server-Side Apply](development/fabric8-server-side-apply.md)
 - [Kit Development](development/kits.md)

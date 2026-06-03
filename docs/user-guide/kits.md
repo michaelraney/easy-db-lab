@@ -372,3 +372,6 @@ cp -r /path/to/my-kit/* ~/.easy-db-lab/profiles/default/kits/my-kit/
 # Now it appears in kit list and can be installed by name:
 easy-db-lab kit install my-kit
 ```
+
+
+For a full walkthrough of building and publishing your own kit, see the [Kit Development](../development/kits.md) guide.
