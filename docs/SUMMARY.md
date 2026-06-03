@@ -4,19 +4,18 @@
 
 # Getting Started
 
-- [Prerequisites](getting-started/prerequisites.md)
 - [Installation](getting-started/installation.md)
 - [Setup](getting-started/setup.md)
 
 # User Guide
 
-- [Cluster Setup](user-guide/cluster-setup.md)
 - [Tutorial](user-guide/tutorial.md)
 - [Cassandra](user-guide/installing-cassandra.md)
 - [OpenSearch](user-guide/opensearch.md)
 - [Spark](user-guide/spark.md)
 - [Kits](user-guide/kits.md)
   - [ClickHouse](user-guide/clickhouse.md)
+    - [Backup & Restore](user-guide/clickhouse-backup-restore.md)
   - [Presto](user-guide/install-presto.md)
 - [Monitoring](user-guide/monitoring.md)
   - [Profiling](user-guide/profiling.md)
@@ -34,9 +33,7 @@
 
 - [Commands](reference/commands.md)
 - [Ports](reference/ports.md)
-- [Log Infrastructure](reference/log-infrastructure.md)
 - [OpenTelemetry](reference/opentelemetry.md)
-- [Pyroscope Configuration](reference/pyroscope-configuration.md)
 - [Spark Debugging](reference/spark-debugging.md)
 
 # Development
@@ -47,5 +44,6 @@
 - [Testing](development/testing.md)
 - [End-to-End Testing](development/end-to-end-testing.md)
 - [Spark](development/spark.md)
-- [SOCKS Proxy Architecture](development/socks-proxy.md)
+- [Log Infrastructure](reference/log-infrastructure.md)
+- [Pyroscope Configuration](reference/pyroscope-configuration.md)
 - [Kit Development](development/kits.md)

@@ -63,6 +63,20 @@ easy-db-lab init my-cluster --arch ARM64 --instance r7g.2xlarge
 easy-db-lab init my-cluster --up
 ```
 
+
+### Storage Requirements
+
+Database instances need a data disk separate from the root volume. This can come from either:
+
+- **Instance store (local NVMe)** — Instance types with a `d` suffix (e.g., `i3.xlarge`, `m5d.xlarge`, `c5d.2xlarge`) include local NVMe storage and require no extra configuration.
+- **EBS volumes** — Attach an EBS volume using `--ebs.type` for any other instance type.
+
+If the selected instance type has no instance store and `--ebs.type` is not specified, `up` will fail. For example:
+
+```bash
+easy-db-lab init my-cluster --instance c5.2xlarge --ebs.type gp3 --ebs.size 200
+```
+
 ## Part 2: Launch Infrastructure
 
 Once initialized, provision the AWS infrastructure:
@@ -108,6 +122,10 @@ This configures your shell with:
 - SOCKS proxy configuration
 
 See [Shell Aliases](shell-aliases.md) for all available shortcuts.
+
+```admonish note title="Choosing a database"
+The following section covers Cassandra. If you're deploying a different database, the infrastructure steps above are the same — see [ClickHouse](clickhouse.md), [OpenSearch](opensearch.md), or [Spark](spark.md) for database-specific setup after your cluster is running.
+```
 
 ## Part 3: Configure Cassandra 5.0
 
