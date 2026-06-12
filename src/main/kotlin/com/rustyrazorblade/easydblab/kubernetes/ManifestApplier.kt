@@ -28,8 +28,6 @@ private val lenientYaml = Yaml(configuration = YamlConfiguration(strictMode = fa
  * client.load() returns GenericKubernetesResource which cannot be cast to typed
  * classes and has no handler for serverSideApply(). This utility extracts the
  * kind from YAML and routes to the appropriate typed loader.
- *
- * See docs/fabric8-server-side-apply.md for details on this issue.
  */
 object ManifestApplier {
     private val log = KotlinLogging.logger {}

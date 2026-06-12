@@ -37,7 +37,7 @@ Update docs when:
 - Adding a new observability component → update `user-guide/monitoring.md` or create a new page
 - Changing profiling behavior → update `user-guide/profiling.md`
 - Adding a new datasource or dashboard → update `user-guide/monitoring.md`
-- Changing cluster setup flow → update `user-guide/cluster-setup.md` and `user-guide/tutorial.md`
+- Changing cluster setup flow → update `user-guide/tutorial.md`
 
 ## Adding a New Page
 

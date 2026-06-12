@@ -2,7 +2,7 @@
 
 easy-db-lab creates lab environments for database evaluations in AWS. It provisions infrastructure, deploys databases, and sets up a full observability stack so you can focus on testing, benchmarking, and learning.
 
-Supported databases include [Apache Cassandra](user-guide/installing-cassandra.md), [ClickHouse](user-guide/clickhouse.md), and [OpenSearch](user-guide/opensearch.md), with [Apache Spark](user-guide/spark.md) available for analytics workloads.
+Supported databases include [Apache Cassandra](user-guide/installing-cassandra.md), [ClickHouse](user-guide/clickhouse.md), [TiDB](user-guide/tidb.md), and [OpenSearch](user-guide/opensearch.md), with [Trino](user-guide/install-trino.md), [Presto](user-guide/install-presto.md), and [Apache Spark](user-guide/spark.md) available for analytics workloads.
 
 If you are looking for a tool to aid in stress testing Cassandra clusters, see the companion project [cassandra-easy-stress](https://github.com/apache/cassandra-easy-stress).
 
@@ -20,6 +20,9 @@ If you're looking for tools to help manage Cassandra in *production* environment
 
 - **[Apache Cassandra](user-guide/installing-cassandra.md)**: Versions 3.0, 3.11, 4.0, 4.1, 5.0, and trunk builds. Includes custom build support, Cassandra Sidecar, and integration with cassandra-easy-stress for benchmarking.
 - **[ClickHouse](user-guide/clickhouse.md)**: Sharded clusters with configurable replication, distributed tables, and S3-tiered storage.
+- **[TiDB](user-guide/tidb.md)**: MySQL-compatible HTAP clusters deployed via the TiDB Operator, with TiKV row storage for OLTP and TiFlash columnar storage for analytics.
+- **[Trino](user-guide/install-trino.md)**: Distributed SQL query engine with federation support for querying across data sources.
+- **[Presto](user-guide/install-presto.md)**: Distributed SQL query engine for in-memory analytics.
 - **[OpenSearch](user-guide/opensearch.md)**: AWS OpenSearch domains for search and analytics.
 - **[Apache Spark](user-guide/spark.md)**: EMR-based Spark clusters for analytics workloads.
 
@@ -39,10 +42,13 @@ If you're looking for tools to help manage Cassandra in *production* environment
 
 ### Monitoring and Observability
 
-- **VictoriaMetrics**: Time-series database for metrics storage
-- **VictoriaLogs**: Centralized log aggregation
-- **Grafana**: Pre-configured dashboards for Cassandra, ClickHouse, and system metrics
-- **OpenTelemetry**: Distributed tracing and metrics collection
+- **[VictoriaMetrics](user-guide/victoria-metrics.md)**: Time-series database for metrics storage
+- **[VictoriaLogs](user-guide/victoria-logs.md)**: Centralized log aggregation
+- **Tempo**: Distributed trace storage with trace-to-metrics correlation
+- **[Pyroscope](user-guide/profiling.md)**: Continuous profiling of database and system processes
+- **[Grafana](user-guide/monitoring.md)**: Pre-configured dashboards for Cassandra, ClickHouse, and system metrics
+- **[OpenTelemetry](reference/opentelemetry.md)**: Distributed tracing and metrics collection
+- **[eBPF Observability](user-guide/monitoring.md#ebpf-observability)**: Beyla for L7 network metrics and ebpf_exporter for low-level kernel metrics
 - **[AxonOps](https://axonops.com/)**: Optional integration with AxonOps for Cassandra monitoring and management
 
 ### Developer Experience
@@ -55,5 +61,6 @@ If you're looking for tools to help manage Cassandra in *production* environment
 ### Stress Testing
 
 - **cassandra-easy-stress**: Native integration with Apache stress testing tool
+- **[Sysbench](user-guide/sysbench.md)**: OLTP benchmarks against any MySQL- or PostgreSQL-compatible kit, with live results in Grafana
 - **Kubernetes Jobs**: Run stress tests as K8s jobs for scalability
 - **Artifact Collection**: Automatic collection of metrics and diagnostics
