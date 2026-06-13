@@ -63,10 +63,10 @@ The command is safe to re-run. If a PV exists with a stale claimRef (the PVC was
 ### `platform create-pvs`
 
 ```
-easy-db-lab platform create-pvs --kit <name> --size <Gi> [--node-type db|app]
+easy-db-lab platform create-pvs --kit <name> --size <Gi> [--node-type db|app] [--pvc-name <name>]
 ```
 
-Creates one PV per node of the specified type. Defaults to `db` nodes. For stateless kits that need app-node storage, use `--node-type app`.
+Creates one PV per node of the specified type. Defaults to `db` nodes. For stateless kits that need app-node storage, use `--node-type app`. `--pvc-name` sets the volumeClaimTemplate name to pre-bind against (default: `data`).
 
 ### `platform info`
 
@@ -96,12 +96,19 @@ All templates receive these standard variables from cluster state:
 | `__CONTROL_HOST_PRIVATE__` | Control node private IP (use for intra-cluster connectivity) |
 | `__DB_NODE_COUNT__` | Number of database nodes |
 | `__APP_NODE_COUNT__` | Number of app (stress) nodes |
-| `__BUCKET_NAME__` | S3 bucket name |
+| `__DB_NODE_IPS__` | Private IPs of database nodes |
+| `__APP_NODE_IPS__` | Private IPs of app nodes |
+| `__BUCKET_NAME__` | Per-cluster S3 bucket prefix |
+| `__ACCOUNT_BUCKET__` | Account-level S3 bucket (survives cluster teardown) |
 | `__REGION__` | AWS region |
+| `__VPC_CIDR__` | VPC CIDR block |
 | `__STORAGE_CLASS_WFC__` | `local-storage-wfc` |
 | `__KIT_NAME__` | Kit name |
 | `__STORAGE_SIZE__` | Storage size (e.g., `100Gi`) |
 | `__KUBECONFIG__` | Path to local kubeconfig |
+| `__EASY_DB_LAB_EXEC__` | Path to the easy-db-lab executable |
+| `__RUNNING_KITS__` | Names of currently running kits |
+| `__OPENSEARCH_ENDPOINT__` | OpenSearch domain endpoint, if provisioned |
 
 Unresolved `__VAR__` placeholders emit a warning but do not fail the render.
 
@@ -109,51 +116,68 @@ Unresolved `__VAR__` placeholders emit a warning but do not fail the render.
 
 ```
 my-kit/
+├── kit.yaml
 ├── README.md.template
 ├── values.yaml.template
-├── start.sh.template
-└── stop.sh.template
+└── bin/
+    ├── start.sh.template
+    └── stop.sh.template
 ```
 
 Files without `.template` suffix are copied verbatim.
 
 ### Profile Templates
 
-Place templates in `~/.easy-db-lab/profiles/<profile>/install/<name>/` to make them discoverable via `kit list`. Profile templates take priority over built-in templates with the same name.
+Place templates in `~/.easy-db-lab/profiles/<profile>/kits/<name>/` to make them discoverable via `kit list`. Additional template directories can be registered with `kit source add`. Resolution priority: profile templates override additional sources, which override built-in templates of the same name.
 
 ## Port Exposure Model
 
-K8s kits installed via `config.yaml` use **standard pod networking** (not `hostNetwork`). Client ports and metrics ports are exposed via `hostPort` mappings so they are accessible on each EC2 instance's network interface.
+Kits use **standard pod networking** (not `hostNetwork`). Client and metrics ports are surfaced on each EC2 instance's network interface in one of two ways:
 
-### Why hostPort?
+- **NodePort services** — stateful db kits (ClickHouse, TiDB) expose their ports through a NodePort service, remapping native ports into the NodePort range (30000–32767). Example: ClickHouse HTTP `8123 → 30123`.
+- **hostPort patches** — helm-based app kits (Presto, Trino) patch `hostPort` mappings onto the coordinator pod at start time, keeping the native port (e.g. `8080 → 8080`).
 
-The OTel collector DaemonSet runs with `hostNetwork: true` so it can scrape both host processes (Cassandra/MAAC at `localhost:9000`) and kit metrics endpoints. For the DaemonSet to reach a pod's metrics port, the pod must expose it via `hostPort` — that makes the port appear on the host network namespace as `localhost:<port>`.
+### Why ports must reach the host
 
-### Port Remapping
-
-When a kit's native port conflicts with a host process, a different `hostPort` is assigned. Example: a ScyllaDB pod using CQL port 9042 would conflict with Cassandra on the host, so it maps `containerPort: 9042 → hostPort: 9142`.
+The OTel collector DaemonSet runs with `hostNetwork: true` so it can scrape both host processes (Cassandra/MAAC at `localhost:9000`) and kit metrics endpoints. It scrapes each kit's declared metrics port at `localhost:<port>`, so that port must be reachable on every node's host network — which both NodePort (listens on all nodes) and hostPort provide. This also avoids conflicts with host processes: a NodePort-range port can never collide with a database listening on its native port on the host.
 
 ### Port Assignments
 
-| Kit | Protocol | containerPort | hostPort | Notes |
+| Kit | Protocol | Native port | Node port | Exposure |
 |---|---|---|---|---|
-| ClickHouse | HTTP | 8123 | 8123 | Query interface |
-| ClickHouse | Native TCP | 9000 | 9000 | Client protocol |
-| ClickHouse | Prometheus | 9363 | 9363 | OTel scrape target |
-| Presto | HTTP | 8080 | 8080 | Coordinator query interface |
+| ClickHouse | HTTP | 8123 | 30123 | NodePort |
+| ClickHouse | Native TCP | 9000 | 30900 | NodePort |
+| ClickHouse | MySQL wire | 9004 | 30904 | NodePort |
+| ClickHouse | PostgreSQL wire | 9005 | 30905 | NodePort |
+| ClickHouse | Prometheus | 9363 | 30936 | NodePort |
+| TiDB | MySQL (SQL layer) | 4000 | 30400 | NodePort |
+| TiDB | Prometheus (tidb-sql) | — | 31080 | NodePort |
+| TiDB | Prometheus (tikv) | — | 32180 | NodePort |
+| TiDB | Prometheus (pd) | — | 32379 | NodePort |
+| TiDB | Prometheus (tiflash) | — | 32234 | NodePort |
+| Presto | HTTP (coordinator) | 8080 | 8080 | hostPort |
+| Presto | Prometheus | 9090 | 9090 | hostPort |
+| Trino | HTTP (coordinator) | 8080 | 8080 | hostPort |
 
-When adding a new kit, choose a `hostPort` that does not conflict with any host process or existing kit in the table above.
+When adding a new kit, choose ports that do not conflict with any host process or existing kit in the table above. Each kit's ports are declared in its `kit.yaml` (`metrics` and `endpoints` sections).
 
 ## Kit Observability
 
-Each kit declares its metrics mode in `config.yaml`:
+Each kit declares its metrics targets in `kit.yaml`. `metrics` is a list — kits with multiple components declare one entry per scrape target, each with a unique `job` name:
 
 ```yaml
 metrics:
-  type: scrape     # Prometheus endpoint — OTel DaemonSet scrapes it
-  port: 9363
-  path: /metrics
+  - type: scrape     # Prometheus endpoint — OTel DaemonSet scrapes it
+    port: 31080
+    path: /metrics
+    job: tidb-sql
+  - type: scrape
+    port: 32180
+    path: /metrics
+    job: tikv
 ```
+
+If `job` is omitted, the kit name is used.
 
 Three modes are supported:
 
@@ -165,16 +189,16 @@ Three modes are supported:
 
 ### Metrics Registration Lifecycle
 
-When a kit with `type: scrape` starts successfully, easy-db-lab:
+When a kit with `type: scrape` targets starts successfully, easy-db-lab:
 
-1. Creates a ConfigMap `easydblab-metrics-<kit>` in the `default` namespace labeled `easydblab.com/kit-metrics=true` containing the job name, port, and path.
-2. Regenerates the OTel collector ConfigMap to include a new Prometheus scrape job for the kit.
+1. Creates one ConfigMap `easydblab-metrics-<job>` per scrape target in the `default` namespace, labeled `easydblab.com/workload-metrics=true` and `easydblab.com/kit=<kit>`, containing the job name, port, and path.
+2. Regenerates the OTel collector ConfigMap to include a Prometheus scrape job per target.
 3. Applies the updated OTel ConfigMap so the running collector picks it up.
 
 When the kit stops:
 
-1. Deletes the `easydblab-metrics-<kit>` ConfigMap.
-2. Regenerates and applies the OTel collector ConfigMap without the kit's scrape job.
+1. Deletes all of the kit's metrics ConfigMaps via the `easydblab.com/kit` label selector.
+2. Regenerates and applies the OTel collector ConfigMap without the kit's scrape jobs.
 
 This is fully automatic — no manual OTel configuration is required when starting or stopping kits.
 
