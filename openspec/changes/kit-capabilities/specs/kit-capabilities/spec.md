@@ -1,16 +1,10 @@
-# Kit Capabilities
+## ADDED Requirements
 
-## Purpose
-
-Declarative database capabilities in `kit.yaml` that generate CLI commands automatically,
-eliminating per-kit Kotlin service and command classes for standard patterns.
-
-## Requirements
-
-### REQ-KCAP-001: capabilities block in kit.yaml
+### Requirement: capabilities block in kit.yaml
 
 `kit.yaml` SHALL support an optional `capabilities:` list. Each entry declares a named
-capability type and its configuration. Unrecognised capability types are ignored.
+capability type and its configuration. Unrecognised capability types MUST be ignored
+without raising an error.
 
 #### Scenario: Recognised capability registers a command
 - **WHEN** `kit.yaml` contains a `capabilities:` list with a recognised type
@@ -20,25 +14,26 @@ capability type and its configuration. Unrecognised capability types are ignored
 - **WHEN** `kit.yaml` contains no `capabilities:` block
 - **THEN** kit behaviour is unchanged from today
 
-### REQ-KCAP-002: sql capability type
+#### Scenario: Unrecognised capability type is ignored
+- **WHEN** `kit.yaml` declares a capability whose type is not recognised
+- **THEN** deserialization succeeds and the unrecognised capability produces no command
+
+### Requirement: sql capability type
 
 The `sql` capability type SHALL register a `sql` subcommand under the kit group that
-executes SQL statements against the kit's JDBC endpoint.
+executes SQL statements against the kit's JDBC endpoint. The capability SHALL read
+connection details from the kit's existing `endpoints:` declaration — specifically the
+first endpoint of type `jdbc` — so no separate connection block is needed.
 
-The `sql` capability SHALL read connection details from the kit's existing `endpoints:`
-declaration — specifically the first endpoint of type `jdbc`. No separate connection
-block is needed.
-
-The `sql` capability SHALL accept:
-- `user` (string, optional) — JDBC username; defaults to empty string
-- `driver-class` (string, optional) — fully-qualified JDBC driver class to force-load
-  before connecting; required for drivers that do not auto-register via ServiceLoader
+The `sql` capability SHALL accept an optional `user` (JDBC username, defaulting to empty
+string) and an optional `driver-class` (fully-qualified JDBC driver class to force-load
+before connecting, required for drivers that do not auto-register via ServiceLoader).
 
 #### Scenario: Inline statement executes against jdbc endpoint
 - **WHEN** a kit declares `capabilities: [{type: sql, user: easy-db-lab}]` and has a
   `jdbc` endpoint
-- **THEN** `easy-db-lab <kit> sql "<statement>"` executes the query
-  and displays results in tabular format
+- **THEN** `easy-db-lab <kit> sql "<statement>"` executes the query and displays results
+  in tabular format
 
 #### Scenario: SQL read from a file
 - **WHEN** the user runs `easy-db-lab <kit> sql --file query.sql`
@@ -68,20 +63,19 @@ The `sql` capability SHALL accept:
 - **WHEN** no nodes of the endpoint's node type exist in cluster state
 - **THEN** an error is emitted before any connection is attempted
 
-### REQ-KCAP-003: Capabilities and @KitCommand commands are additive
+### Requirement: Capabilities and @KitCommand commands are additive
 
 Capability-generated commands and `@KitCommand`-annotated Kotlin commands SHALL both
-appear under the same kit subcommand group. They do not conflict.
+appear under the same kit subcommand group. They MUST NOT conflict.
 
 #### Scenario: Capability and annotated commands coexist
-- **WHEN** a kit declares a `sql` capability and also has `@KitCommand`-annotated
-  classes
+- **WHEN** a kit declares a `sql` capability and also has `@KitCommand`-annotated classes
 - **THEN** both appear as subcommands under the kit group
 
-### REQ-KCAP-004: Existing per-kit SQL commands are removed
+### Requirement: Existing per-kit SQL commands are removed
 
 The `presto sql` and `clickhouse sql` commands SHALL be implemented via the `sql`
-capability. The dedicated per-kit Kotlin service and command classes are deleted.
+capability. The dedicated per-kit Kotlin service and command classes MUST be deleted.
 
 #### Scenario: presto sql uses the generic capability
 - **WHEN** the user runs `easy-db-lab presto sql "SELECT 1"`
